@@ -1,0 +1,74 @@
+version: '3'
+
+tasks:
+  build:
+    deps:
+      - apply
+
+  clean:
+    desc: Clean up the Terraform configuration
+    cmds:
+      - rm --force -r .terraform tfplan tfdestroy .env pw_scrape.log*
+
+  apply:
+    desc: Apply the Terraform configuration
+    deps:
+      - plan
+    cmds:
+      - terraform apply tfplan
+    sources:
+      - tfplan
+    generates:
+      - terraform.tfstate
+
+  tfinit:
+    desc: Initialize the Terraform configuration
+    internal: true
+    cmds:
+      - terraform init
+    generates:
+      - .terraform/**
+      - .terraform.lock.hcl
+
+  plan:
+    desc: Generate a Terraform plan
+    deps:
+      - tfinit
+    cmds:
+      - terraform plan -out=tfplan
+    sources:
+      - ./*.tf
+      - ./*.tfvars
+    generates:
+      - tfplan
+
+  dotenv:
+    desc: Generate a .env file
+    deps:
+      - apply
+    cmds:
+      - python ./populate_env.py
+    generates:
+      - .env
+    sources:
+      - terraform.tfstate
+
+  destroy-plan:
+    desc: Generate a Terraform destroy plan
+    cmds:
+      - terraform plan -destroy -out=tfdestroy
+    sources:
+      - ./*.tf
+      - ./*.tfvars
+    generates:
+      - tfdestroy
+
+  destroy:
+    desc: Destroy the Terraform configuration
+    deps:
+      - destroy-plan
+    cmds:
+      - terraform destroy
+    sources:
+      - terraform.tfstate
+      - tfdestroy

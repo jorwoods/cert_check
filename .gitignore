@@ -1,0 +1,8 @@
+terraform.tfvars
+tfplan
+.venv/
+.ruff_cache/
+.terraform/
+*.log
+*.log.[0-9]
+terraform.tfstate*
