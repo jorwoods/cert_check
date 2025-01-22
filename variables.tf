@@ -16,3 +16,9 @@ variable "subscribers" {
   default     = []
   description = "List of email addresses to subscribe to the SNS topic"
 }
+
+variable "region" {
+  type        = string
+  default     = "us-east-1"
+  description = "AWS region to deploy resources"
+}
