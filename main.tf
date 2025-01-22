@@ -47,7 +47,7 @@ resource "aws_sns_topic" "this" {
 
 resource "aws_sns_topic_subscription" "this" {
   for_each  = var.enabled ? toset(var.subscribers) : toset([])
-  topic_arn = join("", aws_sns_topic.this[*].arn)
+  topic_arn = one(aws_sns_topic.this[*].arn)
   protocol  = "email"
   endpoint  = each.value
 }
