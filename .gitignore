@@ -6,3 +6,6 @@ tfplan
 *.log
 *.log.[0-9]
 terraform.tfstate*
+output.json
+.task/
+backend-config.tfvars

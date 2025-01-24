@@ -16,16 +16,17 @@ tasks:
       - plan
     cmds:
       - terraform apply tfplan
+      - terraform output -json > output.json
     sources:
       - tfplan
     generates:
-      - terraform.tfstate
+      - output.json
 
   tfinit:
     desc: Initialize the Terraform configuration
     internal: true
     cmds:
-      - terraform init
+      - terraform init -backend-config=backend-config.tfvars
     generates:
       - .terraform/**
       - .terraform.lock.hcl
@@ -51,7 +52,7 @@ tasks:
     generates:
       - .env
     sources:
-      - terraform.tfstate
+      - output.json
 
   destroy-plan:
     desc: Generate a Terraform destroy plan
