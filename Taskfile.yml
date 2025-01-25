@@ -5,6 +5,15 @@ tasks:
     deps:
       - apply
 
+  prepare:
+    desc: Prepare the environment
+    cmds:
+      - python create_config.py
+      - python create_tfvars.py
+    generates:
+      - backend-config.tfvars
+      - terraform.tfvars
+
   clean:
     desc: Clean up the Terraform configuration
     cmds:
@@ -25,6 +34,8 @@ tasks:
   tfinit:
     desc: Initialize the Terraform configuration
     internal: true
+    deps:
+      - prepare
     cmds:
       - terraform init -backend-config=backend-config.tfvars
     generates:
