@@ -64,6 +64,38 @@ resource "aws_sns_topic" "this" {
   name  = "${var.prefix}-topic"
 }
 
+# https://docs.aws.amazon.com/sns/latest/dg/sns-access-policy-language-api-permissions-reference.html
+data "aws_iam_policy_document" "sns_policy" {
+  count = var.enabled ? 1 : 0
+  statement {
+    actions = [
+      "sns:AddPermission",
+      "sns:DeleteTopic",
+      "sns:GetDataProtectionPolicy",
+      "sns:GetTopicAttributes",
+      "sns:ListSubscriptionsByTopic",
+      "sns:ListTagsForResource",
+      "sns:Publish",
+      "sns:PutDataProtectionPolicy",
+      "sns:RemovePermission",
+      "sns:SetTopicAttributes",
+      "sns:Subscribe",
+    ]
+    effect    = "Allow"
+    resources = [aws_sns_topic.this[count.index].arn]
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:aws:iam::${data.aws_caller_identity.this.account_id}:root"]
+    }
+  }
+}
+
+resource "aws_sns_topic_policy" "this" {
+  count  = var.enabled ? 1 : 0
+  arn    = aws_sns_topic.this[count.index].arn
+  policy = data.aws_iam_policy_document.sns_policy[count.index].json
+}
+
 resource "aws_sns_topic_subscription" "this" {
   for_each  = var.enabled ? toset(var.subscribers) : toset([])
   topic_arn = one(aws_sns_topic.this[*].arn)
