@@ -1,7 +1,10 @@
+import argparse
+from collections.abc import Sequence
 from contextlib import closing
 from copy import deepcopy
 import logging
 import os
+import sys
 
 import boto3
 from playwright.sync_api import sync_playwright, Playwright
@@ -30,11 +33,20 @@ logger = logging.getLogger(__name__)
 ignore_certs = {"PCAT", "PCED", "PCPP", "PCAP", "PCET", "PCEP"}
 REGION = os.getenv("REGION", "us-east-1").replace('"', "")
 
+def parse_args(args: Sequence[str] | None = None) -> argparse.Namespace:
+    if args is None:
+        args = sys.argv[1:]
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--test", action="store_true")
+    return parser.parse_args(args)
+
 def str_to_bool(s: str) -> bool:
     return s.lower() in {"true", "1"}
 
 def get_certs(playwright: Playwright) -> set[str]:
-    with closing(playwright.chromium.launch(headless=os.getenv("HEADLESS", True))) as browser:
+    with closing(playwright.chromium.launch(
+            headless=str_to_bool(os.getenv("HEADLESS", "1"))
+        )) as browser:
         logger.debug("Browser launched")
         page = browser.new_page()
         page.goto("https://ums.edube.org/store")
@@ -65,15 +77,23 @@ def notify(subject: str, message: str) -> None:
         Message=message,
     )
 
-with sync_playwright() as p:
-    try:
-        certs = get_certs(p)
-    except Exception as e:
-        logger.exception("Error in Collecting Python Certs")
-        notify("Error in Collecting Python Certs", str(e))
-    else:
-        if certs:
-            notify("New Python Certs", "\n".join(certs))
+def main() -> None:
+    args = parse_args()
+    if args.test:
+        logger.info("Testing")
+        notify("Test", "Test")
+        return
+    with sync_playwright() as p:
+        try:
+            certs = get_certs(p)
+        except Exception as e:
+            logger.exception("Error in Collecting Python Certs")
+            notify("Error in Collecting Python Certs", str(e))
         else:
-            logger.info("No new Python Certs found")
+            if certs:
+                notify("New Python Certs", "\n".join(certs))
+            else:
+                logger.info("No new Python Certs found")
 
+if __name__ == "__main__":
+    main()
