@@ -1,13 +1,13 @@
 from pathlib import Path
 
-backend_config = Path('backend_config.tfvars')
+backend_config = Path('backend-config.tfvars')
 
 def main(file: Path = backend_config):
     if not file.exists():
         file.touch()
         print(f"File {file} created")
 
-    config = {k.strip(): v.strip() for line in file.read_text().split('\n') for k,v in line.split('=') if line}
+    config = dict(map(str.strip, line.split('=')) for line in file.read_text().split("\n") if line)
     expected_keys = ['bucket', 'key', 'region',]
     missing_keys = [key for key in expected_keys if key not in config]
     if missing_keys:
