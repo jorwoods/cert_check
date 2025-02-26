@@ -4,6 +4,7 @@ from contextlib import closing
 from copy import deepcopy
 import logging
 import os
+import re
 import sys
 
 import boto3
@@ -30,7 +31,7 @@ log_config["loggers"]["root"]["handlers"].append("file")
 sweet_logs.setup_logging(log_config)
 logger = logging.getLogger(__name__)
 
-ignore_certs = {"PCAT", "PCED", "PCPP", "PCAP", "PCET", "PCEP"}
+ignore_certs = {"PCAT", "PCED", "PCPP", "PCAP", "PCET", "PCEP", "PCPP1"}
 REGION = os.getenv("REGION", "us-east-1").replace('"', "")
 
 def parse_args(args: Sequence[str] | None = None) -> argparse.Namespace:
@@ -58,7 +59,12 @@ def get_certs(playwright: Playwright) -> set[str]:
         page.locator(query).first.wait_for(state="visible")
         logger.debug("Python Certs loaded")
         for loc in page.locator(query).all():
-            certs.add(loc.inner_text().split("-")[0].strip())
+            text = loc.inner_text()
+            if (match := re.match(r"^(\w{4})-\d+-(\d)\d{2}.*", text)):
+                cert = "".join(match.groups())
+            else:
+                cert = text.split("-")[0].strip()
+            certs.add(cert)
         logger.info(f"Found Python Certs: {certs}")
     return certs - ignore_certs
 
