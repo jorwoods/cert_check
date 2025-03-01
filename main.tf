@@ -33,14 +33,14 @@ data "aws_iam_policy_document" "this" {
       "sns:GetSubscriptionAttributes",
     ]
     effect    = "Allow"
-    resources = [aws_sns_topic.this[count.index].arn]
+    resources = aws_sns_topic.this[*].arn
   }
 }
 
 resource "aws_iam_policy" "this" {
   count  = var.enabled ? 1 : 0
   name   = "${var.prefix}-policy"
-  policy = data.aws_iam_policy_document.this[count.index].json
+  policy = one(data.aws_iam_policy_document.this[*].json)
 }
 
 resource "aws_iam_user" "this" {
@@ -50,13 +50,13 @@ resource "aws_iam_user" "this" {
 
 resource "aws_iam_user_policy_attachment" "user_assume_role" {
   count      = var.enabled ? 1 : 0
-  user       = aws_iam_user.this[count.index].name
-  policy_arn = aws_iam_policy.this[count.index].arn
+  user       = one(aws_iam_user.this[*].name)
+  policy_arn = one(aws_iam_policy.this[*].arn)
 }
 
 resource "aws_iam_access_key" "this" {
   count = var.enabled ? 1 : 0
-  user  = aws_iam_user.this[count.index].name
+  user  = one(aws_iam_user.this[*].name)
 }
 
 resource "aws_sns_topic" "this" {
@@ -82,7 +82,7 @@ data "aws_iam_policy_document" "sns_policy" {
       "sns:Subscribe",
     ]
     effect    = "Allow"
-    resources = [aws_sns_topic.this[count.index].arn]
+    resources = aws_sns_topic.this[*].arn
     principals {
       type        = "AWS"
       identifiers = ["arn:aws:iam::${data.aws_caller_identity.this.account_id}:root"]
@@ -92,8 +92,8 @@ data "aws_iam_policy_document" "sns_policy" {
 
 resource "aws_sns_topic_policy" "this" {
   count  = var.enabled ? 1 : 0
-  arn    = aws_sns_topic.this[count.index].arn
-  policy = data.aws_iam_policy_document.sns_policy[count.index].json
+  arn    = one(aws_sns_topic.this[*].arn)
+  policy = one(data.aws_iam_policy_document.sns_policy[*].json)
 }
 
 resource "aws_sns_topic_subscription" "this" {
@@ -111,7 +111,7 @@ data "aws_iam_policy_document" "assume_policy" {
 
     principals {
       type        = "AWS"
-      identifiers = [aws_iam_user.this[count.index].arn]
+      identifiers = aws_iam_user.this[*].arn
     }
   }
 }
