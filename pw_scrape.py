@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import argparse
 from collections.abc import Sequence
 from contextlib import closing

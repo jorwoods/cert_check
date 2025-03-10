@@ -31,7 +31,7 @@ tasks:
     generates:
       - output.json
 
-  tfinit:
+  init:
     desc: Initialize the Terraform configuration
     internal: true
     deps:
@@ -45,7 +45,7 @@ tasks:
   plan:
     desc: Generate a Terraform plan
     deps:
-      - tfinit
+      - init
     cmds:
       - terraform plan -out=tfplan
     sources:
