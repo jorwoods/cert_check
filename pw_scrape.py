@@ -54,10 +54,10 @@ def get_certs(playwright: Playwright) -> set[str]:
         page = browser.new_page()
         page.goto("https://ums.edube.org/store")
         logger.debug("Navigated to UMS")
-        page.locator(".nav-item").filter(has_text="ython").first.click()
+        page.locator("ul.filters__list label").filter(has_text="ython").first.click()
         logger.debug("Navigated to Python Certs")
         certs = set()
-        query = "span.product-list__item__short-name"
+        query = "div.product-list__item__short-name"
         page.locator(query).first.wait_for(state="visible")
         logger.debug("Python Certs loaded")
         for loc in page.locator(query).all():
